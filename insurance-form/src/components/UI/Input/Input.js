@@ -5,44 +5,36 @@ import classes from './Input.module.css';
 const input = ( props ) => {
     let inputElement = null;
     const inputClasses = [classes.InputElement];
-
-    if (props.invalid && props.shouldValidate && props.touched) {
+    if (props.isvalid !== undefined && props.isvalid === false) {
         inputClasses.push(classes.Invalid);
     }
-
-    switch ( props.elementType ) {
-        case ( 'input' ):
-            inputElement = <input
-                className={inputClasses.join(' ')}
-                {...props.elementConfig}
-                value={props.value}
-                onChange={props.changed} />;
-            break;
-        case ( 'select' ):
-            inputElement = (
-                <select
+    if (props.elementType === "select") {
+        inputElement = <select
                     className={classes.Select}
-                    value={props.value}
+                    style={{textTransform: 'capitalize', display: props.displayEnabled ? 'block' : 'none'}}
                     onChange={props.changed}>
                     {props.elementConfig.options.map(option => (
-                        <option key={option.value} value={option.value}>
-                            {option.displayValue}
+                        <option key={option} value={option}>
+                            {option}
                         </option>
                     ))}
                 </select>
-            );
-            break;
-        default:
-            inputElement = <input
-                className={inputClasses.join(' ')}
-                {...props.elementConfig}
-                value={props.value}
-                onChange={props.changed} />;
+    } else {
+        inputElement = <input
+            id={props.id}
+            className={inputClasses.join(' ')}
+            style={{display: props.displayEnabled ? 'block' : 'none'}}
+            onBlur={props.changed} 
+            {...props.elementConfig}/>
+            
     }
 
     return (
-        <div className={classes.Input}>
-            <label className={classes.Label}>{props.label}</label>
+        <div className={classes.Input}>  
+            <label 
+                className={classes.Label}
+                style={{display: props.displayEnabled ? 'block' : 'none'}}
+                >{props.label}</label>    
             {inputElement}
         </div>
     );

@@ -7,69 +7,60 @@ import classes from './InsuranceForm.module.css';
 class InsuranceForm extends Component {
     state = {
         insuranceForm: {
-        businessName: {
+            businessName: {
+                elementLabel: "What is your business name?",
                 elementType: 'input',
                 elementConfig: {
                     type: 'text',
                     placeholder: ''
                 },
-                value: '',
                 validation: {
+                    type: "text",
                     required: true,
-                    minLength: 1,
-                    maxLength: 2000
+                    minLength: 2,
+                    maxLength: 5
+                }
+            },
+            stateNameUS: {
+                elementLabel: "In which US state does your business operate?",
+                elementType: 'select',
+                elementConfig: {
+                    options: [ 'AL', 'AK', 'AS', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FM', 'FL', 'GA', 'GU', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MH', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'MP', 'OH', 'OK', 'OR', 'PW', 'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VI', 'VA', 'WA', 'WV', 'WI', 'WY' ]
                 },
-                valid: false,
-                touched: false
+                value: "AL"
+            },
+            primaryBusiness: {
+                elementLabel: "What is your primary business",
+                elementType: 'select',
+                elementConfig: {
+                    options: [ 'landscaping', "software development", "accounting"]
                 },
-        stateNameUS: {
-            elementType: 'input',
-            elementConfig: {
-                type: 'text',
-                placeholder: ''
+                value: "landscaping"
             },
-            value: '',
-            validation: {
-                required: true,
-                stateList: [ 'AL', 'AK', 'AS', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FM', 'FL', 'GA', 'GU', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MH', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'MP', 'OH', 'OK', 'OR', 'PW', 'PA', 'PR', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VI', 'VA', 'WA', 'WV', 'WI', 'WY' ]
-            },
-            valid: false,
-            touched: false
+            contract: {
+                elementLabel: "Do you always use contracts when engaging with your clients?",
+                elementType: 'select',
+                elementConfig: {
+                    options: [ "yes", "no"]
+                },
+                displayCondition: {
+                    rules: () => this.contractDispalyValidation()
+                },
+                value: "yes"
+            }
         },
-        primaryBusiness: {
-            elementType: 'select',
-            elementConfig: {
-                options: [
-                    {'value': 'landscaping', 'displayValue': 'Landscaping'},
-                    {'value': 'softwareDevelopment', 'displayValue': 'Software Development'},
-                    {'value': 'accounting', 'displayValue': 'Accounting'}
-                ]
-            },
-            value: 'Landscaping',
-            validation: {
-                rule1:[ 'AL', 'accounting'],
-                rule2:['Tx', 'software development']
-            },
-            valid: true
-        },
-        contract: {
-            elementType: 'select',
-            elementConfig: {
-                options: [
-                    {'value': 'yes', 'displayValue': 'Yes'},
-                    {'value': 'no', 'displayValue': 'No'}
-                ]
-            },
-            value: '',
-            validation: {
-                rule1:[ 'AL', 'accounting'],
-                rule2:['Tx', 'software development']
-            },
-            valid: true
-        }
-    },
-        askContract : [],
-        formIsValid :false
+        formIsValid: false
+    }
+
+    contractDispalyValidation = () => {
+        return ((this.state.insuranceForm.stateNameUS.value !== undefined 
+            && this.state.insuranceForm.stateNameUS.value === "AL" 
+            && this.state.insuranceForm.primaryBusiness.value !== undefined
+            && this.state.insuranceForm.primaryBusiness.value === "accounting")
+            || (this.state.insuranceForm.stateNameUS.value !== undefined 
+                && this.state.insuranceForm.stateNameUS.value === "TX" 
+                && this.state.insuranceForm.primaryBusiness.value !== undefined
+                && this.state.insuranceForm.primaryBusiness.value === "software development"));
     }
 
     insuranceFormHandler = ( event ) => {
@@ -77,158 +68,100 @@ class InsuranceForm extends Component {
         const InsuranceFormSummary = {'businessName': this.state.insuranceForm.businessName.value,
             'stateNameUS': this.state.insuranceForm.stateNameUS.value,
             'primaryBusiness': this.state.insuranceForm.primaryBusiness.value}
-        if(this.state.insuranceForm.contract.value !== ''){
+        if(this.contractDispalyValidation()){
             InsuranceFormSummary['contract'] = this.state.insuranceForm.contract.value;
         }
-
-
-        if(this.state.formIsValid){
-             alert(JSON.stringify(InsuranceFormSummary));
-        }    
-        return null;
+        if (this.state.insuranceForm.businessName.isValid) {
+                alert(JSON.stringify(InsuranceFormSummary));
+                return;
+        }
+        alert("Error in form");
     }
 
-    checkValidity(value, rules) {
+    checkCondition(condition, conditionVal, value) {
         let isValid = true;
-        if (!rules) {
-            return true;
+        switch(condition) {
+            case 'required': 
+                isValid =  value.trim() !== '';
+                break;
+            case 'minLength':
+                isValid = value.length >= conditionVal;
+                break;
+            case 'maxLength':
+                isValid = value.length <= conditionVal;
+                break;
+            default:
+                isValid = true;
         }
-        
-        if (rules.required) {
-            isValid = value.trim() !== '' && isValid;
-        }
-
-        if (rules.minLength) {
-            isValid = value.length >= rules.minLength && isValid
-        }
-
-        if (rules.maxLength) {
-            isValid = value.length <= rules.maxLength && isValid
-        }
-        if (rules.stateList){
-            isValid = rules.stateList.includes(value)
-        }
-        if(rules.businessList){
-            isValid = rules.businessList.includes(value)
-        }
-
         return isValid;
     }
 
-    inputChangedHandler = (event, inputIdentifier) => {
+    checkValidity(event, elementKey, element) {
+        const value = event.target.value;
+        let validationNeeded = true;
+        let isValid = false;
+        if (element.validation === undefined) {
+            validationNeeded = false;
+            isValid = true;
+        }
+
+        if(validationNeeded === true){
+            const rules = element.validation;
+
+            for (let condition in rules) {
+                isValid = this.checkCondition(condition, rules[condition], value);
+                //if one of the conditions fail, exit
+                if(!isValid){
+                    break;
+                }
+            }
+        }
+       
+        element.isValid = isValid;
+
+        if(isValid){
+            element.value = value;
+        }
+         
+        //getting a copy
         const updatedInsuranceForm = {
             ...this.state.insuranceForm
         };
-        const updatedFormElement = { 
-            ...updatedInsuranceForm[inputIdentifier]
-        };
-        updatedFormElement.value = event.target.value;
-        updatedFormElement.valid = this.checkValidity(updatedFormElement.value, updatedFormElement.validation);
-        updatedFormElement.touched = true;
-        updatedInsuranceForm[inputIdentifier] = updatedFormElement;
-        
-        let formIsValid = true;
-        for (let inputIdentifier in updatedInsuranceForm) {
-            formIsValid = updatedInsuranceForm[inputIdentifier].valid && formIsValid;
-        }
-        this.setState({insuranceForm: updatedInsuranceForm, formIsValid: formIsValid});
+        updatedInsuranceForm[elementKey]=element;
+        this.setState({insuranceForm: updatedInsuranceForm});
     }
-    render () {
-        const formElementsArray = [];
-        for (let key in this.state.insuranceForm) {
-            formElementsArray.push({
-                id: key,
-                config: this.state.insuranceForm[key]
-            });
+
+    enableDisplay(element) {
+        let displayEnabled = true;
+        //if no displayConditions found..return true
+        if (element.displayCondition === undefined) {
+            return displayEnabled;
         }
+        return element.displayCondition.rules();
+    }
+
+    render () {
         let form = (
-            <form onSubmit={this.insuranceFormHandler}>
-                {formElementsArray.map(formElement => {
-                    if(formElement.id === "businessName"){
-                        return <React.Fragment  key={formElement.id}>
-                            <label className={classes.Label}>what is your business name?</label>
-                            <Input 
-                                key={formElement.id}
-                                elementType={formElement.config.elementType}
-                                elementConfig={formElement.config.elementConfig}
-                                value={formElement.config.value}
-                                invalid={!formElement.config.valid}
-                                shouldValidate={formElement.config.validation}
-                                touched={formElement.config.touched}
-                                changed={(event) => this.inputChangedHandler(event, formElement.id)} />
-                        </React.Fragment>
-                    }
-                    else if (formElement.id === "stateNameUS"){
-                        return <React.Fragment  key={formElement.id}>
-                        <label className={classes.Label}>In which US state does your business operate?</label>
-                        <Input 
-                            key={formElement.id}
-                            elementType={formElement.config.elementType}
-                            elementConfig={formElement.config.elementConfig}
-                            value={formElement.config.value}
-                            invalid={!formElement.config.valid}
-                            shouldValidate={formElement.config.validation}
-                            touched={formElement.config.touched}
-                            changed={(event) => this.inputChangedHandler(event, formElement.id)} />
-                    </React.Fragment>
-                    }
-                    else if (formElement.id === "primaryBusiness"){
-                        return <React.Fragment  key={formElement.id}>
-                        <label className={classes.Label}>What is your primary business</label>
-                        <Input 
-                            key={formElement.id}
-                            elementType={formElement.config.elementType}
-                            elementConfig={formElement.config.elementConfig}
-                            value={formElement.config.value}
-                            invalid={!formElement.config.valid}
-                            shouldValidate={formElement.config.validation}
-                            touched={formElement.config.touched}
-                            changed={(event) => this.inputChangedHandler(event, formElement.id)} 
-                            askContract = {(event)=> this.askContract(event)} />
-                    </React.Fragment>
-                    }
-                    else if (formElement.id === "contract"){
-                        if(this.state.insuranceForm.primaryBusiness.value === 'softwareDevelopment' && 
-                            this.state.insuranceForm.stateNameUS.value === 'TX'){
-                                 return <React.Fragment  key={formElement.id}>
-                                    <label className={classes.Label}>Do you always use contracts when engaging with your clients?</label>
-                                    <Input 
-                                        key={formElement.id}
-                                        elementType={formElement.config.elementType}
-                                        elementConfig={formElement.config.elementConfig}
-                                        value={formElement.config.value}
-                                        invalid={!formElement.config.valid}
-                                        shouldValidate={formElement.config.validation}
-                                        touched={formElement.config.touched}
-                                        changed={(event) => this.inputChangedHandler(event, formElement.id)} />
-                                    </React.Fragment>
-                        }
-                        else if(this.state.insuranceForm.primaryBusiness.value === 'accounting' && 
-                        this.state.insuranceForm.stateNameUS.value === 'AL'){
-                             return <React.Fragment  key={formElement.id}>
-                                <label className={classes.Label}>Do you always use contracts when engaging with your clients?</label>
-                                <Input 
-                                    key={formElement.id}
-                                    elementType={formElement.config.elementType}
-                                    elementConfig={formElement.config.elementConfig}
-                                    value={formElement.config.value}
-                                    invalid={!formElement.config.valid}
-                                    shouldValidate={formElement.config.validation}
-                                    touched={formElement.config.touched}
-                                    changed={(event) => this.inputChangedHandler(event, formElement.id)} />
-                                </React.Fragment>
-                         }
-                    }
-                })}
-                <Button btnType="Success" style={{marginLeft:'20px'}}>Get Quote</Button>
-            </form>
-        );
-        return (
             <div className={classes.InsuranceForm}>
                 <h4 style={{marginLeft:'10px',color:'green',fontStyle:'italic'}}>Enter your Insurance Details</h4>
-                {form}
+                <form onSubmit={this.insuranceFormHandler}>
+                    { Object.keys(this.state.insuranceForm).map( key => { 
+                        let formElement = this.state.insuranceForm[key];
+                        return <Input 
+                        key={key}
+                        id={key}
+                        isvalid={formElement.isValid}
+                        label={formElement.elementLabel}
+                        elementType={formElement.elementType}
+                        elementConfig={formElement.elementConfig}
+                        displayEnabled={this.enableDisplay(formElement)}
+                        changed={(event) => this.checkValidity(event, key, formElement)} />             
+                    })}
+                    <Button btnType="Success" style={{marginLeft:'20px'}}>Get Quote</Button>
+                </form>
             </div>
         );
+        return form;
     }
 }
 
